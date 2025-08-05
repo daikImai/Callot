@@ -1,0 +1,794 @@
+@charset "utf-8";
+
+:root {
+    --orange: #f8c68d;
+    --dark-orange: #ff914d;
+    --light-orange: #fcdebd;
+    --green: #189208;
+    --dark-green: #116b05;
+}
+
+body {
+    font-family: "Pacifico", cursive;
+    margin: auto;
+    background-color: var(--orange);
+    min-height: 100dvh; /* 画面全体の高さを保証 */
+    display: flex;
+    flex-direction: column;
+    user-select: none; /* テキスト選択を無効化 */
+    -webkit-user-select: none; /* Safari, iOS */
+    -moz-user-select: none;     /* Firefox 用 */
+    -ms-user-select: none;      /* IE/Edge 用 */
+    touch-action: manipulation; /* ダブルタップズームのみ無効 */
+}
+
+.wrapper {
+    display: flex;
+    justify-content: center;
+}
+
+.font-kiwi {
+    font-family: "Kiwi Maru", serif;
+}
+
+.font-MPlusRounded {
+    font-family: "M PLUS Rounded 1c", sans-serif;
+    font-weight: 600;
+    font-style: normal;
+}
+
+.selectable {
+    user-select: text;
+    -webkit-user-select: text; /* Safari, iOS */
+    -moz-user-select: text;     /* Firefox 用 */
+    -ms-user-select: text;      /* IE/Edge 用 */
+}
+
+.title-image {
+    margin-top: 1rem;
+    height: 140px;
+}
+
+#titleModal {
+    width: 350px;
+    padding: 30px;
+    background-color: var(--light-orange);
+    border-radius: 16px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+#canvas-OR {
+    margin: 1.5rem 0;
+}
+
+#titleModal p {
+    font-size: 1.3rem;
+    margin-bottom: 1.5rem;
+}
+
+#datesOnly, #datesAndHours {
+    width: 120px;
+    height: 80px;
+    margin: 0rem 1rem 1.5rem;
+    font-size: 1.3rem;
+    background-color: #fcdab6;
+}
+
+#titleModal input {
+    width: 150px;
+    border-radius: 4px;
+    border: solid 1px;
+    margin-right: 2rem;
+    font-size: 1.1rem;
+    background-color: #fff;
+    padding: 0 0.3rem;
+}
+
+#roomIdButton, #createButton {
+    font-size: 1.1rem;
+    height: 40px;
+    width: 60px;
+}
+
+#mainPage {
+    margin-top: 1rem;
+}
+
+#showRoomName {
+    background-color: var(--light-orange);
+    width: 300px;
+    height: 50px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 0.5rem;
+    font-size: 1.5rem;
+    text-align: center;
+    line-height: 50px;
+}
+
+#showRoomId {
+    background-color: var(--orange);
+    width: 180px;
+    height: 20px;
+    margin-bottom: 0.5rem;
+    font-size: 0.8rem;
+    text-align: center;
+    cursor: pointer;
+}
+
+#currentMonth {
+    font-size: 1.8rem;
+    padding-bottom: 0.3rem;
+}
+
+.calendar {
+    height: 440px;
+    width: 360px;
+    padding: 8px 20px;
+    background-color: var(--light-orange);
+    border-radius: 16px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.viewing {
+    box-shadow: 0 0 0 3px var(--dark-orange) inset;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3px;
+}
+
+button {
+    background-color: var(--green);
+    align-items: center;
+    padding-bottom: 0.1rem;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+button:hover, #resetButton:hover, #saveButton.abled:hover, #showListButton:hover, #timeSaveButton.abled:hover, #nicknameSaveButton.abled:hover {
+    background-color: var(--dark-green);
+}
+
+#prevMonth, #nextMonth {
+    width: 30px;
+    height: 20px;
+    line-height: 20px;
+    padding-bottom: 1.4rem;
+    margin: 0 0.2rem;
+}
+
+.calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-gap: 5px;
+    margin-bottom: 3px;
+    text-align: center;
+}
+
+.calendar-days div {
+    display: flex;
+    font-family: "Kiwi Maru", serif;
+    font-size: 0.8rem;
+    padding: 10px;
+    height: 5px;
+    width: 42px;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.sun {
+    color: rgb(250, 80, 80);
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: repeat(6, 1fr);
+    grid-gap: 5px;
+}
+
+.calendar-cell {
+    display: flex;
+    padding: 0 10px 20px;
+    font-size: 1.2rem;
+    background-color: #fcdab6;
+    border-radius: 4px;
+    cursor: pointer;
+    height: 50px;
+    width: 42px;
+    align-items: center;
+    justify-content: center;
+}
+
+.calendar-cell-hover:hover {
+    background-color: var(--orange);
+}
+
+.date {
+    position: absolute;
+}
+
+.nickname-count-list {
+    font-size: 0.8rem;
+    color: var(--green);
+    margin-top: 2.2rem;
+    font-family: cursive;
+}
+
+.nickname-count-calendar {
+    font-size: 0.7rem;
+    color: var(--green);
+    margin-top: 2.6rem;
+    font-family: cursive;
+}
+
+.past {
+    opacity: 0.3;
+}
+
+.empty {
+    background-color: var(--light-orange);
+    cursor: default;
+}
+
+.empty:hover {
+    background-color: var(--light-orange);
+}
+
+.selected {
+    box-shadow: 0 0 0 4px var(--orange) inset;
+}
+
+.finally-selected {
+    background-color: var(--orange);
+    box-shadow: 0 0 0 4px var(--dark-orange) inset;
+}
+
+.selectedAll {
+    background-color: var(--orange);
+}
+
+.change-mode {
+    text-align: right;
+    margin-top: -2rem;
+    margin-right: 0.5rem;
+}
+
+.right {
+    text-align: right;
+}
+
+#viewingButton.checked {
+    color: var(--dark-orange);
+    opacity: 1;
+}
+
+#viewingButton {
+    margin-left: 0.3rem;
+    background-color: var(--light-orange);
+    color: gray;
+    opacity: 0.5;
+    user-select: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+}
+
+#saveButton, #resetButton {
+    margin: 1rem 1.5rem;
+    height: 40px;
+    width: 90px;
+}
+
+#saveButton {
+    background-color: var(--light-orange);
+    cursor: default;
+}
+
+#datesOnly.abled, #datesAndHours.abled {
+    background-color: #f9b96f;
+    cursor: pointer;
+}
+
+#saveButton.abled, #timeSaveButton.abled, #nicknameSaveButton.abled {
+    background-color: var(--green);
+    cursor: pointer;
+}
+
+#resetButton.disabled {
+    background-color: var(--light-orange);
+    cursor: default;
+}
+
+#showListButton {
+    height: 40px;
+    width: 110px;
+}
+
+#mask1, #mask2, #mask3, #mask4, #mask5 {
+    background: rgba(0, 0, 0, .1);
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    opacity: 0;
+    visibility: hidden;
+}
+
+#listModal {
+    width: 360px;
+    height: 510px;
+    padding: 0.5rem 0.7rem 1.5rem;
+    background-color: var(--light-orange);
+    border-radius: 16px;
+    position: absolute;
+    inset: 2.7rem 0 auto;
+    margin: auto;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+}
+
+#memberList {
+    background-color: var(--light-orange);
+    color: #432;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    font-size: 1.1rem;
+}
+
+#memberList:hover {
+    color: var(--dark-orange);
+}
+
+.no-data-message {
+    font-family: "Kiwi Maru", serif;
+    font-size: 1.2rem;
+    text-align: center;
+    width: 300px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+#closeListButton {
+    position: absolute;
+    bottom: 1.7rem;
+    height: 30px;
+    width: 60px;
+}
+
+#closeHoursButton {
+    position: absolute;
+    bottom: 0.6rem;
+    height: 30px;
+    width: 60px;
+}
+
+#selectedDatesGrid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    grid-gap: 5px;
+}
+
+.final-cell {
+    display: flex;
+    padding: 0 5px 10px;
+    font-size: 1.2rem;
+    height: 60px;
+    width: 50px;
+    background-color: var(--orange);
+    border-radius: 4px;
+    justify-content: center;
+    cursor: pointer;
+}
+
+#timeInputModal {
+    flex-direction: column;
+    align-items: center;
+    width: 250px;
+    height: 250px;
+    padding: 1.2rem;
+    background-color: var(--light-orange);
+    border-radius: 16px;
+    position: absolute;
+    inset: 13rem 0 auto;
+    margin: auto;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+}
+
+#timeInputModal h2 {
+    font-size: 1.5rem;
+    padding: 0;
+    margin-bottom: 1.5rem;
+}
+
+.time-input-group1 {
+    margin-bottom: 1.2rem;
+}
+
+.time-input-group2 {
+    margin-bottom: 1.5rem;
+}
+
+#timeSaveButton, #timeCancelButton {
+    height: 35px;
+    width: 60px;
+    margin: 0 1rem;
+}
+
+#timeSaveButton {
+    background-color: #fcdab6;
+    cursor: default;
+}
+
+#drawHoursModal {
+    width: 365px;
+    height: 640px;
+    padding: 0.2rem 1rem 1rem;
+    background-color: var(--light-orange);
+    border-radius: 16px;
+    position: absolute;
+    inset: 1rem 0 auto;
+    margin: 0 auto;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+}
+
+#canvas {
+    margin-right: 0.2rem 0.2rem 0 0;
+}
+
+select {
+    appearance: none; /* デフォルトの矢印を消す */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: var(--light-orange);
+    color: "black";
+    border: 2px solid var(--orange);
+    padding: 0.3rem;
+    font-size: 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    -webkit-text-fill-color: black;
+}
+
+#nicknameInputModal {
+    flex-direction: column;
+    align-items: center;
+    width: 340px;
+    height: 200px;
+    padding: 1.5rem 0;
+    background-color: var(--light-orange);
+    border-radius: 16px;
+    position: absolute;
+    inset: 13rem 0 auto;
+    margin: auto;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+}
+
+#nicknameInputModal h2 {
+    font-size: 1.3rem;
+}
+
+#nicknameInput {
+    margin: 1.5rem 0;
+    height: 35px;
+    width: 150px;
+    border-radius: 4px;
+    border: solid 1px;
+    font-size: 0.9rem;
+    background-color: #fff;
+    padding: 0 0.3rem;
+}
+
+#nicknameSaveButton {
+    background-color: #fcdab6;
+    cursor: default;
+    height: 35px;
+    width: 90px;
+    margin: 0 1rem;
+}
+
+#nicknameCancelButton {
+    height: 35px;
+    width: 90px;
+    margin: 0 1rem;
+}
+
+#drawNicknamesModal {
+    width: 360px;
+    height: 640px;
+    padding: 0.5rem 0.2rem;
+    background-color: var(--light-orange);
+    border-radius: 16px;
+    position: absolute;
+    inset: 1rem 0 auto;
+    margin: auto;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+}
+
+#closeNicknamesButton {
+    position: absolute;
+    bottom: 1rem;
+    height: 30px;
+    width: 60px;
+}
+
+#showDateInNicknames, #showDateInHours {
+    text-align: center;
+    font-size: 1.5rem;
+}
+
+.nickname-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-gap: 5px;
+    margin-top: 0.5rem;
+}
+
+.nickname-cell {
+    display: flex;
+    padding: 0 0.5rem 0.2rem;
+    font-size: 1.2rem;
+    height: 48px;
+    width: 110px;
+    background-color: var(--orange);
+    border-radius: 4px;
+    justify-content: center;
+    text-align: center;
+    align-items: center;
+}
+
+.copyright {
+    height: 1px;
+    line-height: 1px;
+    background-color: #432;
+    text-align: center;
+    padding: 1rem 0;
+    color: #fff;
+    font-family: sans-serif;
+    font-size: 0.8rem;
+    margin-top: 3rem;
+}
+
+.content {
+    flex: 1;
+}
+
+/* ローディング画面 */
+.flower-spinner, .flower-spinner * {
+    box-sizing: border-box;
+}
+
+.flower-spinner {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--orange);
+}
+
+.flower-spinner .dots-container {
+    height: calc(70px / 7);
+    width: calc(70px / 7);
+}
+
+.flower-spinner .smaller-dot {
+    background: var(--dark-orange);
+    height: 100%;
+    width: 100%;
+    border-radius: 50%;
+    animation: flower-spinner-smaller-dot-animation 2.5s 0s infinite both;
+}
+
+.flower-spinner .bigger-dot {
+    background: var(--dark-orange);
+    height: 100%;
+    width: 100%;
+    padding: 10%;
+    border-radius: 50%;
+    animation: flower-spinner-bigger-dot-animation 2.5s 0s infinite both;
+}
+
+@keyframes flower-spinner-bigger-dot-animation {
+    0% {
+        box-shadow: var(--dark-orange) 0px 0px 0px,
+        var(--dark-orange) 0px 0px 0px,
+        var(--dark-orange) 0px 0px 0px,
+        var(--dark-orange) 0px 0px 0px,
+        var(--dark-orange) 0px 0px 0px,
+        var(--dark-orange) 0px 0px 0px,
+        var(--dark-orange) 0px 0px 0px,
+        var(--dark-orange) 0px 0px 0px;
+    }
+    50% {
+        transform: rotate(180deg);
+    }
+    25%, 75% {
+        box-shadow: var(--dark-orange) 26px 0px 0px,
+        var(--dark-orange) -26px 0px 0px,
+        var(--dark-orange) 0px 26px 0px,
+        var(--dark-orange) 0px -26px 0px,
+        var(--dark-orange) 19px -19px 0px,
+        var(--dark-orange) 19px 19px 0px,
+        var(--dark-orange) -19px -19px 0px,
+        var(--dark-orange) -19px 19px 0px;
+    }
+    100% {
+        transform: rotate(360deg);
+        box-shadow: var(--dark-orange) 0px 0px 0px,
+        var(--dark-orange) 0px 0px 0px,
+        var(--dark-orange) 0px 0px 0px,
+        var(--dark-orange) 0px 0px 0px,
+        var(--dark-orange) 0px 0px 0px,
+        var(--dark-orange) 0px 0px 0px,
+        var(--dark-orange) 0px 0px 0px,
+        var(--dark-orange) 0px 0px 0px;
+    }
+}
+
+@keyframes flower-spinner-smaller-dot-animation {
+    0% {
+        box-shadow: var(--dark-orange) 0px 0px 0px,
+        var(--dark-orange) 0px 0px 0px,
+        var(--dark-orange) 0px 0px 0px,
+        var(--dark-orange) 0px 0px 0px,
+        var(--dark-orange) 0px 0px 0px,
+        var(--dark-orange) 0px 0px 0px,
+        var(--dark-orange) 0px 0px 0px,
+        var(--dark-orange) 0px 0px 0px;
+    }
+    25%, 75% {
+        box-shadow: var(--dark-orange) 14px 0px 0px,
+        var(--dark-orange) -14px 0px 0px,
+        var(--dark-orange) 0px 14px 0px,
+        var(--dark-orange) 0px -14px 0px,
+        var(--dark-orange) 10px -10px 0px,
+        var(--dark-orange) 10px 10px 0px,
+        var(--dark-orange) -10px -10px 0px,
+        var(--dark-orange) -10px 10px 0px;
+    }
+    100% {
+        box-shadow: var(--dark-orange) 0px 0px 0px,
+        var(--dark-orange) 0px 0px 0px,
+        var(--dark-orange) 0px 0px 0px,
+        var(--dark-orange) 0px 0px 0px,
+        var(--dark-orange) 0px 0px 0px,
+        var(--dark-orange) 0px 0px 0px,
+        var(--dark-orange) 0px 0px 0px,
+        var(--dark-orange) 0px 0px 0px;
+    }
+}
+
+@media (min-width: 600px){
+    #mainPage {
+        margin-top: 3.5rem;
+    }
+
+    .title-image {
+        margin-top: 4rem;
+    }
+
+    #titleModal {
+        width: 380px;
+    }
+
+    #currentMonth {
+        font-size: 2rem;
+        padding-bottom: 0.4rem;
+    }
+
+    .calendar-header {
+        margin-bottom: 15px;
+    }
+
+    .calendar {
+        padding: 20px 25px;
+        width: 440px;
+        height: 500px;
+    }
+
+    .calendar-days div {
+        width: 50px;
+        margin-bottom: 1rem;
+    }
+    
+    .calendar-cell {
+        height: 50px;
+        width: 50px;
+    }
+
+    .change-mode {
+        margin-top: -1rem;
+    }
+
+    #nicknameInputModal {
+        width: 400px;
+        inset: 18rem 0 auto;
+    }
+
+    #nicknameInputModal h2 {
+        font-size: 1.5rem;
+    }
+
+    #listModal {
+        width: 440px;
+        height: 560px;
+        inset: 5.2rem 0 auto;
+        padding: 1.5rem 1rem 1.5rem;
+    }
+
+    #memberList {
+        margin-bottom: 1rem;
+        font-size: 1.3rem;
+    }
+
+    .no-data-message {
+        font-size: 1.5rem;
+    }
+
+    #selectedDatesGrid {
+        grid-gap: 8px;
+    }
+
+    .final-cell {
+        width: 60px;
+    }
+
+    #closeListButton {
+        bottom: 2.2rem;
+    }
+
+    #timeInputModal {
+        inset: 18rem 0 auto;
+    }
+
+    #drawNicknamesModal {
+        width: 580px;
+        height: 650px;
+        inset: 3.7rem 0 auto;
+        padding-top: 1rem;
+    }
+
+    .nickname-grid {
+        margin-top: 1rem;
+    }
+
+    .nickname-cell {
+        font-size: 1.2rem;
+        width: 180px;
+    }
+
+    #drawHoursModal {
+        padding-top: 1.5rem;
+        inset: 3.8rem 0 auto;
+        width: 450px;
+        height: 695px;
+    }
+    
+    #canvas {
+        margin: 1rem 0.2rem 0 0;
+    }
+
+    #closeHoursButton {
+        bottom: 1.1rem;
+    }
+}

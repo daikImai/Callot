@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="description" content="Calendar Ballot. Callot.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Callot</title>
+    <link rel="icon" type=image/png href="images\logo_callot.png">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ress/dist/ress.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru&family=M+PLUS+Rounded+1c&family=Pacifico&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script type="module" src="script.js" defer></script>
+</head>
+<body>
+    <div class="content">
+        <!-- ローディング画面 -->
+        <div id="loading">
+            <div class="flower-spinner">
+                <div class="dots-container">
+                <div class="bigger-dot">
+                    <div class="smaller-dot"></div>
+                </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- タイトル画面 -->
+        <div id="title">
+            <div class="wrapper">
+                <img class="title-image" src="images/title_callot.png" alt="">
+            </div>
+            <div class="wrapper">
+                <section id="titleModal">
+                    <p class="font-kiwi participate selectable">既存のCallotに参加 >></p>
+                    <div class="wrapper callotId">
+                        <input type="text" id="roomIdInput" placeholder="Callot IDを入力" class="font-kiwi">
+                        <button id="roomIdButton" class="font-kiwi">参加</button>
+                    </div>
+                    <div class="wrapper">
+                        <canvas id="canvas-OR" width="320" height="20"></canvas>
+                    </div>
+                    <p class="font-kiwi selectable">新規のCallotを作成 >></p>
+                    <div class="wrapper">
+                        <button id="datesOnly" class="font-kiwi abled">日付のみ<br>を選択</button>
+                        <button id="datesAndHours" class="font-kiwi">日付と時間<br>を選択</button>
+                    </div>
+                    <div class="wrapper">
+                        <input type="text" id="roomName" placeholder="題名を入力" class="font-kiwi" autocomplete="off" maxlength="12">
+                        <button id="createButton" class="font-kiwi">作成</button>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- メインカレンダー -->
+        <div id="mainPage" style="display: none;">
+            <div class="wrapper">
+                <div id="showRoomId" class="font-kiwi"></div>
+            </div>
+            <div class="wrapper">
+                <div id="showRoomName" class="font-kiwi selectable"></div>
+            </div>
+            <div class="wrapper">
+                <section class="calendar">
+                    <div class="calendar-header">
+                        <button id="prevMonth">&#60;</button>
+                        <span id="currentMonth">2025. 3</span>
+                        <button id="nextMonth">&#62;</button>
+                    </div>
+                    <div class="calendar-days">
+                        <div class="sun">日</div>
+                        <div>月</div>
+                        <div>火</div>
+                        <div>水</div>
+                        <div>木</div>
+                        <div>金</div>
+                        <div>土</div>
+                    </div>
+                    <div class="calendar-grid"></div> <!-- 日付セルが動的にここに表示される -->
+                    <div class="change-mode">
+                        <button id="viewingButton" class="font-kiwi">閲覧モード</button>
+                    </div>
+                </section>
+            </div>
+            <div class="wrapper">
+                <button id="saveButton" class="font-kiwi" disabled>決定</button>
+                <button id="resetButton" class="font-kiwi">やり直す</button>
+            </div>
+            <div class="wrapper">
+                <button id="showListButton" class="font-kiwi wrapper">一覧を表示</button>
+            </div>
+        </div>
+
+        <!-- 一覧を表示モーダル -->
+        <section id="listModal">
+            <div class="right">
+                <button id="memberList" class="font-kiwi">人が投票中</button>
+            </div>
+            <div id="selectedDatesGrid" class="calendar-grid"></div> <!-- 保存した日付を表示 -->
+            <div class="wrapper">
+                <button id="closeListButton" class="font-kiwi">閉じる</button>
+            </div>
+        </section>
+        <div id="mask1"></div>
+
+        <!-- 時間帯入力モーダル -->
+        <section id="timeInputModal" class="wrapper font-kiwi">
+            <h2>時間帯を入力</h2>
+            <div class="time-input-group1">
+                <label>開始時間:</label>
+                <select id="startHour">
+                    <option value="">HH</option>
+                    <option value="00">00</option>
+                    <option value="01">01</option>
+                    <option value="02">02</option>
+                    <option value="03">03</option>
+                    <option value="04">04</option>
+                    <option value="05">05</option>
+                    <option value="06">06</option>
+                    <option value="07">07</option>
+                    <option value="08">08</option>
+                    <option value="09">09</option>
+                    <option value="10">10</option>
+                    <option value="11">11</option>
+                    <option value="12">12</option>
+                    <option value="13">13</option>
+                    <option value="14">14</option>
+                    <option value="15">15</option>
+                    <option value="16">16</option>
+                    <option value="17">17</option>
+                    <option value="18">18</option>
+                    <option value="19">19</option>
+                    <option value="20">20</option>
+                    <option value="21">21</option>
+                    <option value="22">22</option>
+                    <option value="23">23</option>
+                </select>
+                <select id="startMinute">
+                    <option value="">MM</option>
+                    <option value="00">00</option>
+                    <option value="05">05</option>
+                    <option value="10">10</option>
+                    <option value="15">15</option>
+                    <option value="20">20</option>
+                    <option value="25">25</option>
+                    <option value="30">30</option>
+                    <option value="35">35</option>
+                    <option value="40">40</option>
+                    <option value="45">45</option>
+                    <option value="50">50</option>
+                    <option value="55">55</option>
+                </select>
+            </div>
+            <div class="time-input-group2">
+                <label>終了時間:</label>
+                <select id="endHour">
+                    <option value="">HH</option>
+                    <option value="00">00</option>
+                    <option value="01">01</option>
+                    <option value="02">02</option>
+                    <option value="03">03</option>
+                    <option value="04">04</option>
+                    <option value="05">05</option>
+                    <option value="06">06</option>
+                    <option value="07">07</option>
+                    <option value="08">08</option>
+                    <option value="09">09</option>
+                    <option value="10">10</option>
+                    <option value="11">11</option>
+                    <option value="12">12</option>
+                    <option value="13">13</option>
+                    <option value="14">14</option>
+                    <option value="15">15</option>
+                    <option value="16">16</option>
+                    <option value="17">17</option>
+                    <option value="18">18</option>
+                    <option value="19">19</option>
+                    <option value="20">20</option>
+                    <option value="21">21</option>
+                    <option value="22">22</option>
+                    <option value="23">23</option>
+                </select>
+                <select id="endMinute">
+                    <option value="">MM</option>
+                    <option value="00">00</option>
+                    <option value="05">05</option>
+                    <option value="10">10</option>
+                    <option value="15">15</option>
+                    <option value="20">20</option>
+                    <option value="25">25</option>
+                    <option value="30">30</option>
+                    <option value="35">35</option>
+                    <option value="40">40</option>
+                    <option value="45">45</option>
+                    <option value="50">50</option>
+                    <option value="55">55</option>
+                </select>
+            </div>
+            <div class="timeButtons">
+                <button id="timeSaveButton" class="font-kiwi" disabled>保存</button>
+                <button id="timeCancelButton" class="font-kiwi">取消</button>
+            </div>
+        </section>
+        <div id="mask2"></div>
+
+        <!-- 時間帯描画キャンバス -->
+        <section id="drawHoursModal">
+            <div id="showDateInHours"></div> <!-- 選択された日時を表示 -->
+            <div class="wrapper">
+                <canvas id="canvas" width="365" height="555"></canvas>
+            </div>
+            <div class="wrapper">
+                <button id="closeHoursButton" class="font-kiwi">閉じる</button>
+            </div>
+        </section>
+        <div id="mask3"></div>
+
+        <!-- ニックネーム入力モーダル -->
+        <section id="nicknameInputModal" class="font-kiwi">
+            <div class="wrapper">
+                <h2>ニックネームを入力してください</h2>
+            </div>
+            <div class="wrapper">
+                <input type="text" id="nicknameInput" placeholder="ニックネームを入力" class="font-kiwi" autocomplete="off" maxlength="8">
+            </div>
+            <div class="wrapper">
+                <button id="nicknameSaveButton" class="font-kiwi" disabled>保存</button>
+                <button id="nicknameCancelButton" class="font-kiwi">キャンセル</button>
+            </div>
+            </div>
+        </section>
+        <div id="mask4"></div>
+
+        <!-- ニックネーム表示キャンバス -->
+        <section id="drawNicknamesModal">
+            <div id="showDateInNicknames"></div> <!-- 選択された日時を表示 -->
+            <div class="wrapper">
+                <div id="nicknamesGrid" class="nickname-grid"></div> <!-- 保存した日付を表示 -->
+            </div>
+            <div class="wrapper">
+                <button id="closeNicknamesButton" class="font-kiwi">閉じる</button>
+            </div>
+        </section>
+        <div id="mask5"></div>
+    </div>
+
+    <footer>
+        <div class="copyright selectable">
+            <small>&copy; Daiki Imai</small>
+        </div>
+    </footer>
+</body>
+</html>
