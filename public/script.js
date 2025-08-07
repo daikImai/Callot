@@ -1,7 +1,6 @@
 "use strict";
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, getCountFromServer } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-firestore.js";
 
 
 const firebaseConfig = {
@@ -15,7 +14,6 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
 
 const roomIdButton = document.getElementById("roomIdButton");
 const datesOnlyButton = document.getElementById("datesOnly");
@@ -128,13 +126,29 @@ document.addEventListener("DOMContentLoaded", () => {
                 alert("題名を入力してください");
                 return;
             }
-            roomId = generateRoomID();
-            const roomRef = collection(db, roomId); // Callot IDごとにコレクションを作成
-            addDoc(roomRef, {
-                roomName: inputRoomName // Callot IDに対応する題名を保存
-            }).then(() => {
+            // roomId = generateRoomID();
+            fetch('/api/create-room', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    roomName: inputRoomName,
+                    isDatesOnly: isDatesOnly
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    isAnimating = false;
+                    window.location.href = `${window.location.origin}?room=${data.roomid}`;
+                } else {
+                    isAnimating = false;
+                    alert('部屋の作成に失敗しました');
+                }
+            })
+            .catch(error => {
                 isAnimating = false;
-                window.location.href = `${window.location.origin}?room=${roomId}`;
+                console.error('エラー:', error);
+                alert('通信エラーが発生しました');
             });
         });
     } else {
@@ -268,7 +282,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // ニックネーム入力モーダルの「保存」ボタン
-    nicknameSaveButton.addEventListener("click", (e) => {
+    nicknameSaveButton.addEventListener("click", async (e) => {
         if (e.target.disabled) {
             e.preventDefault(); // イベントをキャンセルして処理を防ぐ
             return;
@@ -277,12 +291,21 @@ document.addEventListener("DOMContentLoaded", () => {
         isAnimating = true;
         const nickname = nicknameInput.value.trim();
         if (nickname) {
-            // Firebaseにニックネームを保存する処理
-            const userRef = collection(db, roomId);
-            addDoc(userRef, {
-                nickname: nickname, 
-                selectedDates: selectedDates
-            }).then(() => {
+            // ニックネームと時間帯を保存する処理
+            try {
+                const response = await fetch('/api/save-nickname', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        nickname: nickname,
+                        selectedDates: selectedDates,
+                        roomId: roomId,
+                        isDatesOnly: isDatesOnly
+                    })
+                });
+
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || "保存に失敗しました");
                 mask4.animate(hideListKeyframes, options);
                 mask4.style.pointerEvents = "none";
                 nicknameInputModal.animate(hideListKeyframes, options).onfinish = () => { // アニメーション完了後にクリック許可
@@ -304,9 +327,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 mergeSelectedDatesWithNicknames(selectedDatesWithNicknames, selectedDates, nickname);
                 updateCalendar();
                 console.log("保存後の配列:", selectedDatesWithNicknames);
-            }).catch((error) => {
+            } catch (err) {
                 alert("保存に失敗しました: " + error.message);
-            });
+            };
         } else {
             isAnimating = false;
             alert("ニックネームを入力してください");
@@ -364,7 +387,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // 「一覧を表示」ボタン
-    showListButton.addEventListener("click", () => {
+    showListButton.addEventListener("click", async () => {
         let count = 0;
         listModal.style.visibility = "visible";
         mask1.style.visibility = "visible";
@@ -575,14 +598,14 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // Callot IDをランダムに作成
-function generateRoomID(length = 8) {
-    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    let roomId = isDatesOnly ? "D" : "H"; // isDatesOnlyに応じて一文字目を変更
-    for (let i = 1; i < length; i++) {
-        roomId += characters.charAt(Math.floor(Math.random() * characters.length));
-    }
-    return roomId;
-}
+// function generateRoomID(length = 8) {
+//     const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+//     let roomId = isDatesOnly ? "D" : "H"; // isDatesOnlyに応じて一文字目を変更
+//     for (let i = 1; i < length; i++) {
+//         roomId += characters.charAt(Math.floor(Math.random() * characters.length));
+//     }
+//     return roomId;
+// }
 
 // URLからCallot IDを取得    
 function getRoomIdFromUrl() {
@@ -594,32 +617,34 @@ function getRoomIdFromUrl() {
 
 // Callot IDが存在するかどうか確認
 async function checkCallotId(roomIdFromUrl) {
-    const roomCollectionRef = collection(db, roomIdFromUrl); // Firebase DB から roomId コレクションを参照
-    const querySnapshot = await getDocs(roomCollectionRef); // データを取得
-    if (!querySnapshot.empty) { // Callot IDが存在
-        document.getElementById("title").style.display = "none";
-        document.getElementById("mainPage").style.display = "block";
-        initializeRoom(roomIdFromUrl);
-    } else {
-        alert("このページは存在しません。\nタイトルへ戻ります。");
-        window.location.href = 'https://callot-di2503.web.app'; // タイトルURLへ
+    try {
+        const response = await fetch(`/api/rooms/${roomIdFromUrl}/exists`);
+        const data = await response.json();
+        if (data.exists) {
+            document.getElementById("title").style.display = "none";
+            document.getElementById("mainPage").style.display = "block";
+            initializeRoom(roomIdFromUrl);
+        } else {
+            alert("このページは存在しません。\nタイトルへ戻ります。");
+            window.location.href = 'https://callot-di2503.web.app';
+        }
+    } catch (error) {
+        console.error("checkCallotId error:", error);
+        alert("通信エラーが発生しました。");
     }
 }
 
-
 // DBから題名を取得して表示
 async function getRoomName() {
-    const roomRef = collection(db, roomId);
-    getDocs(roomRef).then((querySnapshot) => {
-        querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            if (data.roomName) {
-                document.getElementById("showRoomName").textContent = data.roomName;
-            }
-        });
-    }).catch((error) => {
+    try {
+        const response = await fetch(`/api/rooms/${roomId}/name`);
+        const data = await response.json();
+        if (data.roomName) {
+            document.getElementById("showRoomName").textContent = data.roomName;
+        }
+    } catch (error) {
         console.error("roomName の取得に失敗しました:", error);
-    });
+    }
 }
 
 // Callot IDを入力して参加
@@ -630,14 +655,19 @@ async function joinRoom() {
         alert("Callot IDを入力してください");
         return;
     }
-    const roomCollectionRef = collection(db, inputRoomId);
-    const querySnapshot = await getDocs(roomCollectionRef);
-    if (!querySnapshot.empty) { // Callot IDが存在
+    try {
+        const response = await fetch(`/api/rooms/${inputRoomId}/exists`);
+        const data = await response.json();
+        if (data.exists) {
+            isAnimating = false;
+            window.location.href = `${window.location.origin}?room=${inputRoomId}`;
+        } else {
+            isAnimating = false;
+            alert("Callot IDが存在しません");
+        }
+    } catch (error) {
         isAnimating = false;
-        window.location.href = `${window.location.origin}?room=${inputRoomId}`;
-    } else {
-        isAnimating = false;
-        alert("Callot IDが存在しません");
+        alert("通信エラーが発生しました。");
     }
 }
 
@@ -698,54 +728,39 @@ async function initializeRoom(roomId) {
 
 // 投票中の全てのnicknameをdbから取得
 async function getAllNicknames() {
-    allNicknames = [];
-    const roomCollectionRef = collection(db, roomId);
-    const querySnapshot = await getDocs(roomCollectionRef); // Callot IDのコレクションからドキュメントを取得
+    try {
+        const response = await fetch(`/api/nicknames?roomId=${encodeURIComponent(roomId)}`);
+        if (!response.ok) throw new Error("データの取得に失敗しました");
 
-    querySnapshot.forEach((doc) => {
-        const docData = doc.data(); // ドキュメントデータを取得
-        if (docData.nickname) { 
-            allNicknames.push(docData.nickname); // ニックネームを配列に追加
-        }
-    });
+        const data = await response.json();
+        allNicknames = data.nicknames || [];
+    } catch (err) {
+        console.error("ニックネーム取得エラー:", err);
+        alert("ニックネームの取得に失敗しました");
+    }
 }
 
 // DBに保存された日付とnicknameを配列に格納
 async function getSelectedDatesWithNicknames() {
-    let tempNicknames = {};
-    const roomCollectionRef = collection(db, roomId);
-    const querySnapshot = await getDocs(roomCollectionRef); // Callot IDのコレクションからドキュメントを取得
+    try {
+        const response = await fetch(`/api/selected-dates?roomId=${roomId}&isDatesOnly=true`)
+        if (!response.ok) throw new Error("取得に失敗しました");
+        
+        const data = await response.json();
+        const tempNicknames = data.selectedDatesWithNicknames;
 
-    querySnapshot.forEach(docSnapshot => {
-        const docData = docSnapshot.data();
-        if (docData.selectedDates) { // selectedDatesが存在する場合、各月ごとに処理
-            Object.keys(docData.selectedDates).forEach(yearMonthKey => {
-                const selectedDays = docData.selectedDates[yearMonthKey]; // 各月の選択された日付群
+        // 返ってきた全日付をuniqueDatesSetに保存
+        Object.keys(tempNicknames).forEach(dateKey => {
+            uniqueDatesSet.add(dateKey);
+        });
 
-                Object.keys(selectedDays).forEach(dateKey => { // 各月の中の日付ごとにニックネームを保存
-                    const nickname = docData.nickname;
-                    
-                    if (!tempNicknames[dateKey]) { // 日付ごとにニックネームを格納
-                        tempNicknames[dateKey] = []; // 新しい日付の場合、配列を初期化
-                    }
-
-                    if (isDatesOnly) {
-                        tempNicknames[dateKey].push(nickname); // ニックネームを追加
-                    } else {
-                        const timeData = selectedDays[dateKey];
-                        tempNicknames[dateKey].push({ // ニックネームと時間帯を追加
-                            nickname: nickname,
-                            start: timeData.start,
-                            end: timeData.end
-                        });
-                    }
-                    uniqueDatesSet.add(dateKey); // DB内の日付を保存
-                });
-            });
-        }
-    });
-    return tempNicknames;
+        return tempNicknames;
+    } catch (err) {
+        console.error("取得エラー:", err);
+        return {};
+    }
 }
+
 
 // 保存の時にselectedDatesをselectedDatesWithNicknamesに統合
 function mergeSelectedDatesWithNicknames(selectedDatesWithNicknames, selectedDates, nickname) {
