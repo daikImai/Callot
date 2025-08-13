@@ -93,9 +93,8 @@ app.post('/api/save-nickname', (req, res) => {
           if (isDatesOnly) {
             insertTimes.run(date, null, null, nicknameId);
           } else {
-            value.forEach(({ start, end }) => {
-              insertTimes.run(date, start, end, nicknameId);
-            });
+            const { start, end } = value;
+            insertTimes.run(date, start, end, nicknameId);
           }
         }
       }
@@ -133,9 +132,11 @@ app.get('/api/nicknames', (req, res) => {
 });
 
 // getSelectedDatesWithNicknames()
-app.get("/api/selected-dates", (req, res) => {
+app.get("/api/selected-dates-with-nicknames", (req, res) => {
     const { roomId, isDatesOnly } = req.query;
     if (!roomId) return res.status(400).json({ error: "roomIdが必要です" });
+
+    const isDatesOnlyBool = isDatesOnly === "true";
 
     const sql = `
         SELECT t.date, t.start_time, t.end_time, n.name AS nickname
@@ -155,13 +156,13 @@ app.get("/api/selected-dates", (req, res) => {
         rows.forEach(row => {
             if (!result[row.date]) result[row.date] = [];
 
-            if (isDatesOnly) {
+            if (isDatesOnlyBool) {
                 result[row.date].push(row.nickname);
             } else {
                 result[row.date].push({
                     nickname: row.nickname,
-                    start: row.start,
-                    end: row.end
+                    start: row.start_time,
+                    end: row.end_time
                 });
             }
         });

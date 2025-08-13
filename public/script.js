@@ -1,20 +1,5 @@
 "use strict";
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
-
-
-const firebaseConfig = {
-    apiKey: "AIzaSyAe0GMWjZpowHXXT7Eu91JHDDRnBNqXxXs",
-    authDomain: "callot-di2503.firebaseapp.com",
-    projectId: "callot-di2503",
-    storageBucket: "callot-di2503.firebasestorage.app",
-    messagingSenderId: "338644669569",
-    appId: "1:338644669569:web:9a84807d255ce34dd82980",
-    measurementId: "G-V7KHQE90HL"
-};
-
-const app = initializeApp(firebaseConfig);
-
 const roomIdButton = document.getElementById("roomIdButton");
 const datesOnlyButton = document.getElementById("datesOnly");
 const datesAndHoursButton = document.getElementById("datesAndHours");
@@ -176,8 +161,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const dateText = dayDiv.querySelector(".date");
             if (!dateText) return;
             const day = dateText.textContent.trim();
-            const yearMonthKey = `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}`;
-            const dateKey = `${yearMonthKey}-${day}`;
+            const yearMonthKey = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+            const dateKey = `${yearMonthKey}-${String(day).padStart(2, '0')}`;
             dayDiv.onclick = null; // 重複を防ぐ
 
             if (isViewingMode) { // ONのとき
@@ -324,11 +309,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.querySelector(".calendar").classList.add("viewing"); // 周りの枠
                 toggleSaveButtonState(); // 決定ボタンを無効に
                 toggleResetButtonState(); // やり直すボタンを無効に
-                mergeSelectedDatesWithNicknames(selectedDatesWithNicknames, selectedDates, nickname);
+                selectedDatesWithNicknames = await updateSelectedDatesWithNicknamesFromDB();
                 updateCalendar();
                 console.log("保存後の配列:", selectedDatesWithNicknames);
             } catch (err) {
-                alert("保存に失敗しました: " + error.message);
+                alert("保存に失敗しました: " + err.message);
             };
         } else {
             isAnimating = false;
@@ -550,7 +535,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let formattedEnd = `${String(endH).padStart(2, "0")}:${String(endM).padStart(2, "0")}`;
 
         const [year, month, day] = selectedDateKey.split("-");
-        const yearMonthKey = `${year}-${month}`;
+        const yearMonthKey = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
 
         if (!selectedDates[yearMonthKey]) selectedDates[yearMonthKey] = {};
         selectedDates[yearMonthKey][selectedDateKey] = { start: formattedStart, end: formattedEnd };
@@ -693,7 +678,7 @@ async function initializeRoom(roomId) {
             const dateText = dayDiv.querySelector(".date");
             if (!dateText) return;
             const day = dateText.textContent.trim();
-            const yearMonthKey = `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}`;
+            const yearMonthKey = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
             const dateKey = `${yearMonthKey}-${day}`;
             dayDiv.onclick = null; // 重複を防ぐ
 
@@ -741,57 +726,32 @@ async function getAllNicknames() {
 }
 
 // DBに保存された日付とnicknameを配列に格納
-async function getSelectedDatesWithNicknames() {
+async function updateSelectedDatesWithNicknamesFromDB() {
     try {
-        const response = await fetch(`/api/selected-dates?roomId=${roomId}&isDatesOnly=true`)
+        const response = await fetch(`/api/selected-dates-with-nicknames?roomId=${roomId}&isDatesOnly=${isDatesOnly}`);
         if (!response.ok) throw new Error("取得に失敗しました");
-        
-        const data = await response.json();
-        const tempNicknames = data.selectedDatesWithNicknames;
 
-        // 返ってきた全日付をuniqueDatesSetに保存
-        Object.keys(tempNicknames).forEach(dateKey => {
+        const data = await response.json();
+        selectedDatesWithNicknames = data.selectedDatesWithNicknames; // 直接更新
+        
+        // uniqueDatesSet も更新
+        Object.keys(selectedDatesWithNicknames).forEach(dateKey => {
             uniqueDatesSet.add(dateKey);
         });
 
-        return tempNicknames;
+        return selectedDatesWithNicknames;
     } catch (err) {
-        console.error("取得エラー:", err);
-        return {};
+        console.error("DB取得エラー:", err);
+        selectedDatesWithNicknames = {};
+        return selectedDatesWithNicknames;
     }
-}
-
-
-// 保存の時にselectedDatesをselectedDatesWithNicknamesに統合
-function mergeSelectedDatesWithNicknames(selectedDatesWithNicknames, selectedDates, nickname) {
-    Object.keys(selectedDates).forEach(yearMonthKey => {
-        const selectedDays = selectedDates[yearMonthKey];
-
-        Object.keys(selectedDays).forEach(dateKey => {
-            if (!selectedDatesWithNicknames[dateKey]) {
-                selectedDatesWithNicknames[dateKey] = [];
-            }
-
-            if (isDatesOnly) {
-                selectedDatesWithNicknames[dateKey].push(nickname);
-            } else {
-                const timeData = selectedDays[dateKey];
-                selectedDatesWithNicknames[dateKey].push({
-                    nickname: nickname,
-                    start: timeData.start,
-                    end: timeData.end
-                });
-            }
-            uniqueDatesSet.add(dateKey); // DB内の日付を保存
-        });
-    });
 }
 
 // 月の表示を更新・作成
 async function updateCalendar(monthOffset = 0) {
     if (isPrevMonthButtonLocked) return; // 連打でも過去に戻らないように
     isPrevMonthButtonLocked = true; // ボタンをロック
-    if (isFirst) selectedDatesWithNicknames = await getSelectedDatesWithNicknames();  // ロード時だけ更新を待ってから配列を保存
+    if (isFirst) selectedDatesWithNicknames = await updateSelectedDatesWithNicknamesFromDB();  // ロード時だけ更新を待ってから配列を保存
     currentDate.setDate(1);
     currentDate.setMonth(currentDate.getMonth() + monthOffset);
     currentMonthLabel.textContent = `${currentDate.getFullYear()}. ${currentDate.getMonth() + 1}`;
@@ -814,7 +774,7 @@ async function updateCalendar(monthOffset = 0) {
     const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
     const daysInMonth = lastDay.getDate();
     const startDay = firstDay.getDay(); // 月の最初の日の曜日
-    const yearMonthKey = `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}`;     
+    const yearMonthKey = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
 
     // 1日目までの空白セル
     for (let i = 0; i < startDay; i++) {
@@ -825,7 +785,7 @@ async function updateCalendar(monthOffset = 0) {
 
     // 日付を表示
     for (let day = 1; day <= daysInMonth; day++) {
-        const dateKey = `${yearMonthKey}-${day}`;
+        const dateKey = `${yearMonthKey}-${String(day).padStart(2, '0')}`;
         const dayDiv = document.createElement("div");
         // dayDiv.textContent = day;
         dayDiv.classList.add("calendar-cell");
