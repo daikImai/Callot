@@ -1,19 +1,9 @@
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const db = require('./db'); // db.jsを読み込む
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-// SQLite DBファイルのパス
-const dbPath = path.join(__dirname, './database/callot.db');
-const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE, (err) => {
-    if (err) {
-        console.error('DB接続エラー:', err.message);
-    } else {
-        console.log('DB接続成功');
-    }
-});
 
 // JSONボディパース対応（POST等を使うなら必要）
 app.use(express.json());
@@ -84,27 +74,38 @@ app.post('/api/save-nickname', (req, res) => {
     const nicknameId = this.lastID;
     const insertTimes = db.prepare(`INSERT INTO times (date, start_time, end_time, nickname_id) VALUES (?, ?, ?, ?)`);
 
-    try {
-      for (const [yearMonth, dates] of Object.entries(selectedDates)) {
-        for (const [dateKey, value] of Object.entries(dates)) {
-          const [year, month, day] = dateKey.split("-");
-          const date = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    const runAsync = (stmt, ...params) => {
+      return new Promise((resolve, reject) => {
+        stmt.run(...params, function(err) {
+          if (err) reject(err);
+          else resolve(this.lastID);
+        });
+      });
+    };
 
-          if (isDatesOnly) {
-            insertTimes.run(date, null, null, nicknameId);
-          } else {
-            const { start, end } = value;
-            insertTimes.run(date, start, end, nicknameId);
+    (async () => {
+      try {
+        for (const [yearMonth, dates] of Object.entries(selectedDates)) {
+          for (const [dateKey, value] of Object.entries(dates)) {
+            const [year, month, day] = dateKey.split("-");
+            const date = `${year}-${month.padStart(2,'0')}-${day.padStart(2,'0')}`;
+
+            if (isDatesOnly) {
+              await runAsync(insertTimes, date, null, null, nicknameId);
+            } else {
+              const { start, end } = value;
+              await runAsync(insertTimes, date, start, end, nicknameId);
+            }
           }
         }
-      }
 
-      insertTimes.finalize();
-      res.json({ success: true, nicknameId });
-    } catch (e) {
-      console.error(e);
-      res.status(500).json({ error: '時間情報の保存に失敗しました' });
-    }
+        insertTimes.finalize(); // すべて完了後に finalize
+        res.json({ success: true, nicknameId });
+      } catch(e) {
+        console.error(e);
+        res.status(500).json({ error: '時間情報の保存に失敗しました' });
+      }
+    })();
   });
 });
 
@@ -131,7 +132,7 @@ app.get('/api/nicknames', (req, res) => {
     });
 });
 
-// getSelectedDatesWithNicknames()
+// updateSelectedDatesWithNicknames()
 app.get("/api/selected-dates-with-nicknames", (req, res) => {
     const { roomId, isDatesOnly } = req.query;
     if (!roomId) return res.status(400).json({ error: "roomIdが必要です" });
@@ -171,7 +172,7 @@ app.get("/api/selected-dates-with-nicknames", (req, res) => {
     });
 });
 
-// --- API: ルームID存在チェック ---
+// ルームID存在チェック
 app.get('/api/rooms/:roomId/exists', (req, res) => {
     const roomId = req.params.roomId;
 
@@ -187,7 +188,7 @@ app.get('/api/rooms/:roomId/exists', (req, res) => {
     });
 });
 
-// --- API: ルーム名取得 ---
+// ルーム名取得
 app.get('/api/rooms/:roomId/name', (req, res) => {
     const roomId = req.params.roomId;
     const sql = `SELECT name FROM rooms WHERE roomid = ?`;
