@@ -209,7 +209,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         } else {
                             if (uniqueDatesSet.size < 40 || (uniqueDatesSet.size === 40 && uniqueDatesSet.has(dateKey))) {
                                 if (selectedDatesWithNicknames[dateKey] && selectedDatesWithNicknames[dateKey].length === 30) {
-                                    alert("この日付にはすでに30人以上のニックネームが登録されています");
+                                    alert("この日付にはすでに30人のニックネームが登録されています");
                                     return;
                                 }
                                 if (!selectedDates[yearMonthKey]) selectedDates[yearMonthKey] = {};
@@ -227,7 +227,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     dayDiv.onclick = () => {
                         if (uniqueDatesSet.size < 40 || (uniqueDatesSet.size === 40 && uniqueDatesSet.has(dateKey))) {
                             if (selectedDatesWithNicknames[dateKey] && selectedDatesWithNicknames[dateKey].length === 10) {
-                                alert("この日付にはすでに10人以上のニックネームが登録されています");
+                                alert("この日付にはすでに10人のニックネームが登録されています");
                                 return;
                             }
                             openTimeModal(dateKey, dayDiv);
@@ -309,7 +309,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.querySelector(".calendar").classList.add("viewing"); // 周りの枠
                 toggleSaveButtonState(); // 決定ボタンを無効に
                 toggleResetButtonState(); // やり直すボタンを無効に
-                selectedDatesWithNicknames = await updateSelectedDatesWithNicknamesFromDB();
+                await updateSelectedDatesWithNicknamesFromDB();
                 updateCalendar();
                 console.log("保存後の配列:", selectedDatesWithNicknames);
             } catch (err) {
@@ -582,16 +582,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("nextMonth").addEventListener("click", () => updateCalendar(1));
 });
 
-// Callot IDをランダムに作成
-// function generateRoomID(length = 8) {
-//     const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-//     let roomId = isDatesOnly ? "D" : "H"; // isDatesOnlyに応じて一文字目を変更
-//     for (let i = 1; i < length; i++) {
-//         roomId += characters.charAt(Math.floor(Math.random() * characters.length));
-//     }
-//     return roomId;
-// }
-
 // URLからCallot IDを取得    
 function getRoomIdFromUrl() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -665,7 +655,7 @@ async function initializeRoom(roomId) {
     document.getElementById("loading").style.display = "none"; // すべて完了後にローディング画面を非表示
 
     memberCount = allNicknames.length;
-    if (memberCount >= 30) { // 30人以上登録されていたら
+    if (memberCount >= 30) { // 30人登録されていたら
         savedAll = true;
         document.getElementById("viewingButton").classList.add("checked");
         document.getElementById("viewingButton").disabled = true;
@@ -673,13 +663,13 @@ async function initializeRoom(roomId) {
         document.querySelector(".calendar").classList.add("viewing"); // 周りの枠
         toggleSaveButtonState(); // 決定ボタンを無効に
         toggleResetButtonState(); // やり直すボタンを無効に
-        alert("30人以上の登録があるためこれ以上投票できません");
+        alert("30人の登録があるためこれ以上投票できません");
         document.querySelectorAll(".calendar-cell").forEach(dayDiv => {
             const dateText = dayDiv.querySelector(".date");
             if (!dateText) return;
             const day = dateText.textContent.trim();
             const yearMonthKey = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
-            const dateKey = `${yearMonthKey}-${day}`;
+            const dateKey = `${yearMonthKey}-${String(day).padStart(2, '0')}`;
             dayDiv.onclick = null; // 重複を防ぐ
 
             if (selectedDatesWithNicknames[dateKey]) {
@@ -738,12 +728,9 @@ async function updateSelectedDatesWithNicknamesFromDB() {
         Object.keys(selectedDatesWithNicknames).forEach(dateKey => {
             uniqueDatesSet.add(dateKey);
         });
-
-        return selectedDatesWithNicknames;
     } catch (err) {
         console.error("DB取得エラー:", err);
         selectedDatesWithNicknames = {};
-        return selectedDatesWithNicknames;
     }
 }
 
@@ -751,7 +738,7 @@ async function updateSelectedDatesWithNicknamesFromDB() {
 async function updateCalendar(monthOffset = 0) {
     if (isPrevMonthButtonLocked) return; // 連打でも過去に戻らないように
     isPrevMonthButtonLocked = true; // ボタンをロック
-    if (isFirst) selectedDatesWithNicknames = await updateSelectedDatesWithNicknamesFromDB();  // ロード時だけ更新を待ってから配列を保存
+    if (isFirst) await updateSelectedDatesWithNicknamesFromDB();  // ロード時だけ更新を待ってから配列を保存
     currentDate.setDate(1);
     currentDate.setMonth(currentDate.getMonth() + monthOffset);
     currentMonthLabel.textContent = `${currentDate.getFullYear()}. ${currentDate.getMonth() + 1}`;
@@ -861,7 +848,7 @@ async function updateCalendar(monthOffset = 0) {
                         // 新しく選択する
                         if (uniqueDatesSet.size < 40 || (uniqueDatesSet.size === 40 && uniqueDatesSet.has(dateKey))) {
                             if (selectedDatesWithNicknames[dateKey] && selectedDatesWithNicknames[dateKey].length === 30) { // 1日に登録可能な最大人数30人
-                                alert("この日付にはすでに30人以上のニックネームが登録されています");
+                                alert("この日付にはすでに30人のニックネームが登録されています");
                                 return;
                             }
                             if (!selectedDates[yearMonthKey]) selectedDates[yearMonthKey] = {};
@@ -879,7 +866,7 @@ async function updateCalendar(monthOffset = 0) {
                 dayDiv.onclick = () => {
                     if (uniqueDatesSet.size < 40 || (uniqueDatesSet.size === 40 && uniqueDatesSet.has(dateKey))) {
                         if (selectedDatesWithNicknames[dateKey] && selectedDatesWithNicknames[dateKey].length === 10) { // 1日に登録可能な最大人数10人
-                            alert("この日付にはすでに10人以上のニックネームが登録されています");
+                            alert("この日付にはすでに10人のニックネームが登録されています");
                             return;
                         }
                         openTimeModal(dateKey, dayDiv); // 時間帯を選択
@@ -1038,7 +1025,7 @@ function drawHours(dateKey, selectedDatesWithNicknames) {
         ctx.fillText(startMinute, startX - 7, startY + 12); // 分だけ表示
         ctx.fillText(endMinute, endX - 7, endY - 3); // 分だけ表示
         ctx.fillStyle = "black"
-        ctx.font = "11px 'Pacifico'";
+        ctx.font = "11px 'Kiwi Maru', serif";
         let coordinateY;
         const chunks = nickname.match(/.{1,3}/g); // 1～3文字ごとに分割
         if (chunks.length === 1) {
