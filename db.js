@@ -5,11 +5,11 @@ const path = require('path');
 const dbPath = path.resolve(__dirname, 'database', 'callot.db');
 
 // データベース接続
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) {
-    console.error('SQLite接続エラー:', err.message);
+const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE, (err) => {
+if (err) {
+    console.error('DB Connection Error:', err.message);
   } else {
-    console.log('SQLiteに接続しました');
+    console.log('DB Connection Successful');
   }
 });
 
