@@ -601,7 +601,7 @@ async function checkCallotId(roomIdFromUrl) {
             initializeRoom(roomIdFromUrl);
         } else {
             alert("このページは存在しません。\nタイトルへ戻ります。");
-            window.location.href = 'https://callot-di2503.web.app';
+            window.location.href = 'https://callot.onrender.com/';
         }
     } catch (error) {
         console.error("checkCallotId error:", error);
