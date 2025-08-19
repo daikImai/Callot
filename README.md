@@ -1,0 +1,64 @@
+# Callot
+日程調整アプリ
+
+## Overview
+このアプリは、複数人での日程調整ができるウェブアプリです。  
+誰がどの日のどの時間帯で空いており、それがどこの時間帯で被っているかを一目で確認することができます。
+
+## Demo
+URL: https://callot.onrender.com
+
+## Tech Stack
+- Frontend: HTML, CSS, JavaScript
+- Backend: Node.js, Express
+- Database: PostgreSQL
+- Deployment: Render
+
+## Features
+- ルームの作成
+- 日付のみ/日付と時間 での調整の選択
+- 日程の追加・閲覧
+
+# Setup in Local
+## 1. Install necessary softwares
+- Node.js
+- PostgreSQL
+## 2. Clone the repository
+```bash
+git clone https://github.com/daikImai/Callot2.git
+cd Callot2
+```
+## 3. Install dependencies
+```bash
+npm install
+```
+## 4. Create PostgreSQL database
+
+ローカルのPostgreSQLでターミナルを開き、以下を実行:
+```sql
+-- データベースを作成
+CREATE DATABASE callot_db;
+
+-- 開発用ユーザーを作成
+CREATE USER callot_user WITH PASSWORD 'password';
+
+-- 作成したユーザーに権限を付与
+GRANT ALL PRIVILEGES ON DATABASE callot_db TO callot_user;
+```
+## 5. Setup environment variables
+
+.env ファイルを作成して以下を記入:
+```bash
+DATABASE_URL=postgres://callot_user:password@localhost:5432/callot_db
+PORT=3000
+```
+## 6. Setup database
+```bash
+node setup.js
+```
+## 7. Start the server
+```bash
+node server.js
+```
+Access on Browser: http://localhost:3000
+
