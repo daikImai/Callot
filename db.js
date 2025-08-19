@@ -1,16 +1,16 @@
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
+require('dotenv').config(); // process.env に反映
 
-// DBファイルのパス
-const dbPath = path.resolve(__dirname, 'database', 'callot.db');
+const { Pool } = require('pg');
 
-// データベース接続
-const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE, (err) => {
-if (err) {
-    console.error('DB Connection Error:', err.message);
-  } else {
-    console.log('DB Connection Successful');
-  }
+const pool = new Pool({
+  host: process.env.PG_HOST,
+  port: process.env.PG_PORT,
+  user: process.env.PG_USER,
+  password: process.env.PG_PASSWORD,
+  database: process.env.PG_DATABASE,
 });
 
-module.exports = db;
+module.exports = {
+  query: (text, params) => pool.query(text, params),
+  pool
+};
