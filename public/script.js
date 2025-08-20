@@ -128,6 +128,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 } else {
                     isAnimating = false;
                     alert('部屋の作成に失敗しました');
+                    return;
                 }
             })
             .catch(error => {
@@ -145,7 +146,7 @@ document.addEventListener("DOMContentLoaded", () => {
         navigator.clipboard.writeText(roomId).then(() => {
             alert("コピーしました: " + roomId);
         }).catch((err) => {
-            console.error("コピーに失敗:", err);
+            console.error("コピーに失敗しました:", err);
         });
     });
 
@@ -217,7 +218,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                 dayDiv.classList.add("selected");
                                 uniqueDatesSet.add(dateKey);
                             } else {
-                                alert("最大選択日数は40日です");
+                                alert("最大投票日数は40日です");
                                 return;
                             }
                         }
@@ -232,7 +233,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             }
                             openTimeModal(dateKey, dayDiv);
                         } else {
-                            alert("最大選択日数は40日です");
+                            alert("最大投票日数は40日です");
                             return;
                         }
                     };
@@ -278,6 +279,34 @@ document.addEventListener("DOMContentLoaded", () => {
         if (nickname) {
             // ニックネームと時間帯を保存する処理
             try {
+                await Promise.all([updateSelectedDatesWithNicknamesFromDB(), getAllNicknames()]); // はじめにデータベースからデータを取得
+                if (!validateSubmission(selectedDatesWithNicknames, uniqueDatesSet)) {
+                    alert("提出時にエラーが発生しました。\n情報が更新されています。");
+                    mask4.animate(hideListKeyframes, options);
+                    mask4.style.pointerEvents = "none";
+                    nicknameInputModal.animate(hideListKeyframes, options).onfinish = () => { 
+                        mask4.style.pointerEvents = "auto";
+                        isAnimating = false;
+                        nicknameInputModal.style.visibility = "hidden";
+                        mask4.style.visibility = "hidden";
+                        saveButton.classList.remove("abled");
+                    };
+                    for (const yearMonthKey in selectedDates) {
+                        for (const dateKey in selectedDates[yearMonthKey]) {
+                            if (!selectedDatesWithNicknames[dateKey]) {
+                                uniqueDatesSet.delete(dateKey);
+                            }
+                        }
+                    }
+                    selectedDates = {}; // 選択してある日付はリセット
+                    toggleSaveButtonState();
+                    document.querySelectorAll(".calendar-cell").forEach(cell => {
+                        cell.classList.remove("selected"); // 選択した日付をリセット
+                    });
+                    initializeRoom(roomId); // ルームを再初期化
+                    return; // バリデーション失敗時は保存しない
+                }
+
                 const response = await fetch('/api/save-nickname', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -309,7 +338,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.querySelector(".calendar").classList.add("viewing"); // 周りの枠
                 toggleSaveButtonState(); // 決定ボタンを無効に
                 toggleResetButtonState(); // やり直すボタンを無効に
-                await updateSelectedDatesWithNicknamesFromDB();
+                await updateSelectedDatesWithNicknamesFromDB(); // 提出後にデータを更新
                 updateCalendar();
                 console.log("保存後の配列:", selectedDatesWithNicknames);
             } catch (err) {
@@ -363,7 +392,6 @@ document.addEventListener("DOMContentLoaded", () => {
     resetButton.addEventListener("click", () => {
         savedAll = false;
         selectedDates = {};
-        uniqueDatesSet = new Set();
         toggleSaveButtonState();
         document.querySelectorAll(".calendar-cell").forEach(cell => {
             cell.classList.remove("selected"); // 選択した日付をリセット
@@ -605,7 +633,7 @@ async function checkCallotId(roomIdFromUrl) {
         }
     } catch (error) {
         console.error("checkCallotId error:", error);
-        alert("通信エラーが発生しました。");
+        alert("通信エラーが発生しました");
     }
 }
 
@@ -642,7 +670,7 @@ async function joinRoom() {
         }
     } catch (error) {
         isAnimating = false;
-        alert("通信エラーが発生しました。");
+        alert("通信エラーが発生しました");
     }
 }
 
@@ -856,7 +884,7 @@ async function updateCalendar(monthOffset = 0) {
                             dayDiv.classList.add("selected");
                             uniqueDatesSet.add(dateKey); // Set に追加
                         } else { // 最大40日まで選択可能
-                            alert("最大選択日数は40日です");
+                            alert("最大投票日数は40日です");
                             return;
                         }
                     }
@@ -871,7 +899,7 @@ async function updateCalendar(monthOffset = 0) {
                         }
                         openTimeModal(dateKey, dayDiv); // 時間帯を選択
                     } else { // 最大40日まで選択可能
-                        alert("最大選択日数は40日です");
+                        alert("最大投票日数は40日です");
                         return;
                     }
                 };
@@ -1076,4 +1104,26 @@ function drawNicknames(dateKey, selectedDatesWithNicknames) {
         dayDiv.classList.add("font-kiwi");
         nicknamesGrid.appendChild(dayDiv); // セルを追加
     });
+}
+
+// 制限チェック関数
+function validateSubmission(selectedDatesWithNicknames, uniqueDatesSet) {
+    const maxDates = 40;
+    const maxPerDate = isDatesOnly ? 30 : 10;
+
+    if (allNicknames.length >= 30) {
+        return false; // 最大登録可能人数を超えている 
+    }
+
+    if (uniqueDatesSet.size > maxDates) {
+        return false; // 最大登録可能日数を超えている
+    }
+
+    for (const [date, entries] of Object.entries(selectedDatesWithNicknames)) {
+        if (entries.length >= maxPerDate) {
+            return false; // 1日あたりの最大登録可能人数を超えている
+        }
+    }
+
+    return true; // すべてOK
 }
