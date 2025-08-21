@@ -67,7 +67,6 @@ const options = {
 
 document.addEventListener("DOMContentLoaded", () => {
     roomId = getRoomIdFromUrl();
-    console.log("Callot ID: ", roomId);
     if (roomId === null) {
         document.getElementById("loading").style.display = "none";
         drawOr = document.getElementById("canvas-OR").getContext("2d"); // ORの表示キャンバス
@@ -252,7 +251,7 @@ document.addEventListener("DOMContentLoaded", () => {
         mask4.style.visibility = "visible";
         nicknameInputModal.animate(showListKeyframes, options);
         mask4.animate(showListKeyframes, options);
-        console.log("Selected Dates:", selectedDates);
+        // console.log("Selected Dates:", selectedDates);
     });
 
     // ニックネーム入力のテキストボックス
@@ -340,7 +339,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 toggleResetButtonState(); // やり直すボタンを無効に
                 await updateSelectedDatesWithNicknamesFromDB(); // 提出後にデータを更新
                 updateCalendar();
-                console.log("保存後の配列:", selectedDatesWithNicknames);
+                // console.log("保存後の配列:", selectedDatesWithNicknames);
             } catch (err) {
                 alert("保存に失敗しました: " + err.message);
             };
@@ -396,7 +395,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.querySelectorAll(".calendar-cell").forEach(cell => {
             cell.classList.remove("selected"); // 選択した日付をリセット
         });
-        console.log("Selected Dates:", selectedDates);
+        // console.log("Selected Dates:", selectedDates);
     });
 
     // 「一覧を表示」ボタン
@@ -469,7 +468,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
         }
-        console.log("Sorted Dates:", sortedDates);
+        // console.log("Sorted Dates:", sortedDates);
     });
 
     // 投票中の名前の表示モーダル
@@ -581,7 +580,7 @@ document.addEventListener("DOMContentLoaded", () => {
             timeSaveButton.classList.remove("abled");
         };
         uniqueDatesSet.add(selectedDateKey);
-        console.log("Selected Dates:", selectedDates);
+        // console.log("Selected Dates:", selectedDates);
     });
 
     // 時間帯の「取消」ボタン
@@ -726,7 +725,7 @@ async function initializeRoom(roomId) {
             }
         });
     }
-    console.log("DB内の情報", selectedDatesWithNicknames);
+    // console.log("DB内の情報", selectedDatesWithNicknames);
 }
 
 // 投票中の全てのnicknameをdbから取得
