@@ -947,6 +947,25 @@ function openTimeModal(dateKey, dayDiv) {
     startMinute.value = "";
     endHour.value = "";
     endMinute.value = "";
+
+    const [year, month, day] = selectedDateKey.split("-");
+    const yearMonthKey = `${year}-${month}`;
+
+    // もし既存データがあればセット
+    if (selectedDates[yearMonthKey] && selectedDates[yearMonthKey][dateKey]) {
+        const { start, end } = selectedDates[yearMonthKey][dateKey];
+        if (start) {
+            const [sHour, sMin] = start.split(":");
+            startHour.value = sHour;
+            startMinute.value = sMin;
+        }
+        if (end) {
+            const [eHour, eMin] = end.split(":");
+            endHour.value = eHour;
+            endMinute.value = eMin;
+        }
+    }
+
     let isReady = false;
 
     [startHour, startMinute, endHour, endMinute].forEach(input => {
