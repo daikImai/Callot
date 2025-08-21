@@ -47,7 +47,49 @@ app.post('/api/create-room', async (req, res) => {
 // ニックネームと時間帯の保存
 app.post('/api/save-nickname', async (req, res) => {
   const { roomId, nickname, selectedDates, isDatesOnly } = req.body;
+  const maxPerDate = isDatesOnly ? 30 : 10;
+  const maxDates = 40;
+
   try {
+    const sql = `
+      SELECT t.date, n.name AS nickname
+      FROM times t
+      JOIN nicknames n ON t.nickname_id = n.id
+      JOIN rooms r ON n.room_id = r.id
+      WHERE r.roomid = $1
+    `;
+    const result = await db.query(sql, [roomId]);
+
+    const selectedDatesWithNicknamesDB = {};
+    const allNicknames = new Set();
+    result.rows.forEach(row => {
+      if (!selectedDatesWithNicknamesDB[row.date]) selectedDatesWithNicknamesDB[row.date] = [];
+      selectedDatesWithNicknamesDB[row.date].push(row.nickname);
+      allNicknames.add(row.nickname);
+    });
+
+    const uniqueDatesSet = new Set(Object.keys(selectedDatesWithNicknamesDB));
+    for (const dates of Object.values(selectedDates)) {
+      for (const dateKey of Object.keys(dates)) {
+        if (!selectedDatesWithNicknamesDB[dateKey]) selectedDatesWithNicknamesDB[dateKey] = [];
+        selectedDatesWithNicknamesDB[dateKey].push(nickname); // 今回提出分を追加
+        uniqueDatesSet.add(dateKey);
+      }
+    }
+
+    // フロントと同じバリデーション
+    if (allNicknames.size >= 30) {
+      return res.status(400).json({ error: "最大登録可能人数を超えています" });
+    }
+    if (uniqueDatesSet.size > maxDates) {
+      return res.status(400).json({ error: "最大登録可能日数を超えています" });
+    }
+    for (const [date, entries] of Object.entries(selectedDatesWithNicknamesDB)) {
+      if (entries.length > maxPerDate) {
+        return res.status(400).json({ error: "1日あたりの最大登録可能人数を超えています" });
+      }
+    }
+
     // nickname挿入
     const insertNicknameSql = `
       INSERT INTO nicknames (name, room_id)
