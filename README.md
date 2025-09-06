@@ -6,7 +6,13 @@
 誰がどの日のどの時間帯で空いており、それがどこの時間帯で被っているかを一目で確認することができます。
 
 ## Demo
-URL: https://callot.onrender.com
+- URL (Render): https://callot.onrender.com
+※ This Render DB is currently suspended.
+
+This project also has a Firebase version implemented without a custom Node.js backend.
+
+- URL (Firebase): https://callot-di2503.web.app
+- GitHub: https://github.com/daikImai/Callot_fb
 
 ## Tech Stack
 - Frontend: HTML, CSS, JavaScript
