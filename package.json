@@ -1,21 +1,21 @@
 {
-  "name": "callot2",
+  "name": "callot",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/daikImai/Callot2.git"
+    "url": "git+https://github.com/daikImai/Callot.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/daikImai/Callot2/issues"
+    "url": "https://github.com/daikImai/Callot/issues"
   },
-  "homepage": "https://github.com/daikImai/Callot2#readme",
+  "homepage": "https://github.com/daikImai/Callot#readme",
   "description": "",
   "dependencies": {
     "cors": "^2.8.5",
